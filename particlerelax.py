@@ -6,6 +6,12 @@ from SimpleMapping import *
 #import seaborn as sns
 from scipy.stats import describe
 from time import time
+import logging
+logger = logging.getLogger(__name__) #created logger with NOSET level of logging, i.e. all messages are recorded.
+# logFormatter = '%(asctime)s - %(levelname)s - %(message)s'
+logger.setLevel(logging.DEBUG)
+logHandler = logging.FileHandler('first_run.log')
+handler = logger.addHandler(logHandler)
 
 #given array of points as all_points
 RAD = 0.15
@@ -95,14 +101,13 @@ def easy_logspace(start, stop, num):
 
 if __name__=="__main__":
 	circle = tessellate_circle_properly(417)
-	print("Using reference step size={0}, RAD = {1}".format(REF_STEP_SIZE, RAD))
+	logger.info("Using reference step size={0}, RAD = {1}".format(REF_STEP_SIZE, RAD))
 	cable = [] #sorted by [layer=theta][strand_number][xy_coords]
 	start_t = time()
 
 	for theta in np.linspace(0, tau, RESOLUTION): #
 		new_circle = rotate_list_of_points(circle, theta)
 		sextant = ary(circle_to_sextant(new_circle))
-		print( "Relaxing for theta = {0}".format(theta) ) # using the step size of 
 		'''
 		#plot the initial state
 		plt.scatter(sextant[:,0], sextant[:,1])
@@ -132,7 +137,7 @@ if __name__=="__main__":
 			step_size = REF_STEP_SIZE*min(dev_factor)
 
 			#print these information for debug purposes.
-			print("Step {0} has a mean force of {1} with bounds of {2} and skewness={3}. Taking a step size of {4}".format( step, des.mean, des.minmax, des.skewness, step_size) )
+			logger.debug("Step {0} has a mean force of {1} with bounds of {2} and skewness={3}. Taking a step size of {4}".format( step, des.mean, des.minmax, des.skewness, step_size) )
 			#take a walk :)
 			for i in range(len(all_points)):
 				all_points[i].walk(forces[i]*step_size)
@@ -141,11 +146,13 @@ if __name__=="__main__":
 		relaxed_pos = ary([p.pos for p in all_points])
 		#cable.append(relaxed_pos)
 		with open ("single_cable_data.txt", "a+") as f:
-			f.write(relaxed_pos)
-		print("finished angle {0} at t={1}s after the start time".format(theta, time()-start_t) )
+			f.write(np.array2string(relaxed_pos, separator=','))
+			f.write(",\n")
+		logger.info("Finished angle {0} using {1} steps at t={2}s after the start time".format(theta, step, time()-start_t) )
 		'''
 		#plotting for checking for anomalies.
 		plt.scatter(relaxed_pos[:,0], relaxed_pos[:,1] )
 		plt.title("Final distribution after relaxing for {} steps".format(NUM_STEPS))
 		plt.show()
 		'''
+	np.save('single_cable_data.npy', cable)
