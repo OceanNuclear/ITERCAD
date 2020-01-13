@@ -144,7 +144,7 @@ if __name__=="__main__":
 			step += 1
 		
 		relaxed_pos = ary([p.pos for p in all_points])
-		#cable.append(relaxed_pos)
+		cable.append(relaxed_pos)
 		with open ("single_cable_data.txt", "a+") as f:
 			f.write(np.array2string(relaxed_pos, separator=','))
 			f.write(",\n")
