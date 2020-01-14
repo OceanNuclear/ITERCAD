@@ -145,7 +145,7 @@ if __name__=="__main__":
                 writer.grab_frame()
                 
                 if des.minmax[1] < F_LIMIT*15 and des.mean < F_LIMIT*15/2.5:  # if the force is small enough, overrelax.
-                    step_size = 1.8
+                    step_size = 1.8 * REF_STEP_SIZE
                 #calculate step size to take
                 else:
                     x = ary([ force_mag[i]/all_points[i].radius_of_effectiveness for i in range(len(force_mag)) ])

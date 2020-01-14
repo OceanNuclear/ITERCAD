@@ -16,13 +16,12 @@ handler = logger.addHandler(logHandler)
 #given array of points as all_points
 RAD = 0.15
 quadrature = lambda lst : sqrt(sum([i**2 for i in lst]))
-NUM_STEPS = 200
 REF_STEP_SIZE = 1 # oscillations occurs for anything above 0.15, even if they started off near equilibrium.
 RESOLUTION = 1200
 #determine when to stop iterating.
 area_sextant = pi*(radius_max**2 - radius_min**2)/6
 wire_radius = sqrt(area_sextant/417)/2 # this is only an approximation, assuming square packing.
-FLIM = wire_radius * 0.5E-2 # 
+F_LIMIT = wire_radius * 0.5E-2 # 
 
 def kernel(scaled_dist):
 	scale_fac = pi/2 #scale to the right radius
@@ -30,7 +29,9 @@ def kernel(scaled_dist):
 	return 1/scale_fac * 1/tan(scaled_dist*scale_fac) # cot(number/(pi/2) ), the 1/scale_fac is intended to keep the slope =-1.
 def inv_kernel(scaled_dist):
 	return pi/2*tan(pi/2*scaled_dist)
-	
+def attract_kernel(x):
+	return -x
+
 class Point:
 	def __init__(self, pos, pk=kernel, wk=kernel):
 		self.pos = ary(pos) # should be a list of len=2
@@ -105,7 +106,7 @@ if __name__=="__main__":
 	cable = [] #sorted by [layer=theta][strand_number][xy_coords]
 	start_t = time()
 
-	for theta in np.linspace(0, tau, RESOLUTION): #
+	for theta in np.linspace(0, tau, RESOLUTION)[146:]: #
 		new_circle = rotate_list_of_points(circle, theta)
 		sextant = ary(circle_to_sextant(new_circle))
 		'''
@@ -119,7 +120,7 @@ if __name__=="__main__":
 		step = 0
 		force_mag = [quadrature(p.get_force(all_points)) for p in all_points ]
 		des = describe(force_mag)
-		while des.minmax[1] > FLIM and des.mean > FLIM/2.5: #For FLIM = .5% of radius, this should take a bit more than 200 iterations.
+		while des.minmax[1] > F_LIMIT and des.mean > F_LIMIT/2.5: #For F_LIMIT = .5% of radius, this should take a bit more than 200 iterations.
 			forces = ary([ p.get_force(all_points) for p in all_points ])
 			force_mag = [quadrature(f) for f in forces]
 			'''
@@ -132,9 +133,12 @@ if __name__=="__main__":
 			des = describe(force_mag)
 			
 			#calculate step size to take
-			x = ary([ force_mag[i]/all_points[i].radius_of_effectiveness for i in range(len(force_mag)) ])
-			dev_factor = (x)*inv_kernel(1-x) #make sure that it's not deviated by too much.
-			step_size = REF_STEP_SIZE*min(dev_factor)
+			if des.minmax[1] < F_LIMIT*15 and des.mean < F_LIMIT*15/2.5:
+				step_size = 1.8*REF_STEP_SIZE
+			else:
+				x = ary([ force_mag[i]/all_points[i].radius_of_effectiveness for i in range(len(force_mag)) ])
+				dev_factor = (x)*inv_kernel(1-x) #make sure that it's not deviated by too much.
+				step_size = REF_STEP_SIZE*min(dev_factor)
 
 			#print these information for debug purposes.
 			logger.debug("Step {0} has a mean force of {1} with bounds of {2} and skewness={3}. Taking a step size of {4}".format( step, des.mean, des.minmax, des.skewness, step_size) )
