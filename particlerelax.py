@@ -106,7 +106,7 @@ if __name__=="__main__":
 	cable = [] #sorted by [layer=theta][strand_number][xy_coords]
 	start_t = time()
 
-	for theta in np.linspace(0, tau, RESOLUTION)[146:]: #
+	for theta in np.linspace(0, tau, RESOLUTION)[1053:]: #
 		new_circle = rotate_list_of_points(circle, theta)
 		sextant = ary(circle_to_sextant(new_circle))
 		'''

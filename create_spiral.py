@@ -128,10 +128,6 @@ def get_z_of_central_column(theta):
     z = h*theta
     return z
 
-def transform_2D_into_3D(list_of_points, z_of_central_column):
-    list_of_3D_points = []
-    return list_of_3D_points
-
 def Rotation2Quat(axis, angle):
     quat = [cos(angle/2), sin(angle/2)*axis[0], sin(angle/2)*axis[1], sin(angle/2)*axis[2]]
     return quat
