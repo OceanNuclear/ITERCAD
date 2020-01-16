@@ -13,6 +13,18 @@ offset_constant_in_sqrt = 12 * (1 + target_r_min_to_r_max_ratio**2)/(1 - target_
 radius_max = sqrt(offset_constant_in_sqrt+12)/sqrt(pi)
 radius_min = sqrt(offset_constant_in_sqrt-12)/sqrt(pi)
 
+def str2array(l):
+    p=0
+    text = ['',]*l.count(']') 
+    for i in l: 
+        if i==']': 
+            p += 1 
+        elif i =='[': 
+            pass 
+        else: 
+            text[p] += i 
+    return ary([np.fromstring(entry.lstrip(', '), sep=',') for entry in text])
+
 with open('single_cable_data.txt', 'r') as f:
     data = ('').join(f.readlines()).replace('\n','').replace(']],',']]\n').split('\n')
 if __name__=='__main__':
@@ -28,18 +40,6 @@ if __name__=='__main__':
     outline = ary(get_outline()).T
     ax.plot(outline[0], outline[1])
     xycoods = ax.scatter(np.ones(417), np.zeros(417))
-
-    def str2array(l):
-        p=0
-        text = ['',]*l.count(']') 
-        for i in l: 
-            if i==']': 
-                p += 1 
-            elif i =='[': 
-                pass 
-            else: 
-                text[p] += i 
-        return ary([np.fromstring(entry.lstrip(', '), sep=',') for entry in text])
                
     if VIDEO:
         with writer.saving(fig, "first_relax_short.mp4", 300):

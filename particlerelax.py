@@ -29,8 +29,6 @@ def kernel(scaled_dist):
 	return 1/scale_fac * 1/tan(scaled_dist*scale_fac) # cot(number/(pi/2) ), the 1/scale_fac is intended to keep the slope =-1.
 def inv_kernel(scaled_dist):
 	return pi/2*tan(pi/2*scaled_dist)
-def attract_kernel(x):
-	return -x
 
 class Point:
 	def __init__(self, pos, pk=kernel, wk=kernel):
@@ -49,9 +47,10 @@ class Point:
 		scaled_dist = dist/self.wall_effect_thickness
 		return self.wall_effect_thickness * self.wk_raw(scaled_dist) #again, these are meant to keep its slope = -1
 		
-	def get_force(self, all_points):
+	def get_force_raw(self, all_points):
 		#exclude itself
-		force = ary([[0.,0.],])
+		wall_force = self.wall_repel()
+		force = [wall_force,]
 		
 		for p in all_points:
 			if not all(p.pos== self.pos): # for all points that isn't itself:
@@ -59,33 +58,38 @@ class Point:
 				dist = quadrature(displacement)
 			
 				if dist < self.radius_of_effectiveness: # if the point is close enough:
-					dir = displacement/dist # normalize the negative displacement vector
+					direc = displacement/dist # normalize the negative displacement vector
 					mag = self.point_kernel(dist)
-					force = np.append(force, [mag*dir], axis=0)
-			
-		force = np.append(force, [self.wall_repel()], axis=0 )
-		return [ sum(force[:,0])/len(force), sum(force[:,1])/len(force) ]
+					force = np.append(force, [mag*direc], axis=0)
+		# if not all(wall_force==[0,0]):
+			# force = np.append(force, [self.wall_repel()], axis=0 )
+		return force
+
+	def get_force(self, all_points):
+		force = self.get_force_raw(all_points)
+		averaged_force = [ sum(force[:,0])/len(force), sum(force[:,1])/len(force) ]
+		return averaged_force
 
 	def wall_repel(self):
 		force = ary([0., 0.])
 		# tangential walls' repulsion
 		if quadrature(self.pos) < radius_min + self.wall_effect_thickness: # close to the centre of the cable
-			dir = self.pos/quadrature(self.pos)
+			direc = self.pos/quadrature(self.pos)
 			dist = quadrature(self.pos) - radius_min
-			force += dir* self.wall_kernel(dist) #distance from the inner radius wall
+			force += direc* self.wall_kernel(dist) #distance from the inner radius wall
 		elif quadrature(self.pos) > radius_max - self.wall_effect_thickness:
-			dir = -self.pos/quadrature(self.pos)
+			direc = -self.pos/quadrature(self.pos)
 			dist = radius_max - quadrature(self.pos)
-			force +=  dir* self.wall_kernel(dist) #distance from the outer radius wall
+			force +=  direc* self.wall_kernel(dist) #distance from the outer radius wall
 		# radial walls' repulsion
 		if self.pos[1] > 1/sqrt(3) * self.pos[0] - 2/sqrt(3) * self.wall_effect_thickness :
-			dir = 0.5* ary([1, -sqrt(3)])
-			dist = dir.dot(self.pos)
-			force += dir* self.wall_kernel(dist)
+			direc = 0.5* ary([1, -sqrt(3)])
+			dist = direc.dot(self.pos)
+			force += direc* self.wall_kernel(dist)
 		elif self.pos[1] < - 1/sqrt(3) * self.pos[0] + 2/sqrt(3) * self.wall_effect_thickness :
-			dir = 0.5* ary([1, sqrt(3)])
-			dist = dir.dot(self.pos)
-			force += dir* self.wall_kernel(dist)
+			direc = 0.5* ary([1, sqrt(3)])
+			dist = direc.dot(self.pos)
+			force += direc* self.wall_kernel(dist)
 		return force
 	
 	def walk(self, step):
