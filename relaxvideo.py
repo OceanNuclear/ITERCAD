@@ -6,7 +6,8 @@ from ConvrgenceVideo import get_outline
 from create_spiral import get_closest_neighbour_distance
 from scipy.stats import describe
 
-VIDEO = False
+VIDEO = True
+READ_FROM_HUMAN_READABLE_FILE= False
 
 target_r_min_to_r_max_ratio = 0.45/1.985 #both radii measurements were recorded in mm.
 offset_constant_in_sqrt = 12 * (1 + target_r_min_to_r_max_ratio**2)/(1 - target_r_min_to_r_max_ratio**2)
@@ -25,11 +26,21 @@ def str2array(l):
             text[p] += i 
     return ary([np.fromstring(entry.lstrip(', '), sep=',') for entry in text])
 
-with open('single_cable_data.txt', 'r') as f:
-    data = ('').join(f.readlines()).replace('\n','').replace(']],',']]\n').split('\n')
 if __name__=='__main__':
+    frame_data = []
+    if READ_FROM_HUMAN_READABLE_FILE:
+        with open('single_cable_data.txt', 'r') as f:
+            data = ('').join(f.readlines()).replace('\n','').replace(']],',']]\n').split('\n')
+        for i in range(len(data)):
+            frame_data.append(str2array(data[i][1:-1]))
+    else:
+        from interframeattract import *
+        column = np.load('simple_attract_result.npy', allow_pickle=True)
+        for i in range(len(column)):
+            frame_data.append( [column[i].points[j].pos for j in range(column[i].num_points)] )
+
     FFMpegWriter = manimation.writers['ffmpeg']
-    metadata = dict(title='first_relax_short', artist='Matplotlib', comment='No interframe attraction applied')
+    metadata = dict(title='wrong_attract', artist='Matplotlib', comment='No interframe attraction applied')
     writer = FFMpegWriter(fps=15, metadata=metadata)
     fig, ax = plt.subplots()
     ax.set_aspect(1.0)
@@ -42,18 +53,16 @@ if __name__=='__main__':
     xycoods = ax.scatter(np.ones(417), np.zeros(417))
                
     if VIDEO:
-        with writer.saving(fig, "first_relax_short.mp4", 300):
-            for i in range(len(data[:90])):
-                frame_data = str2array(data[i][1:-1])
-                xycoods.set_offsets( frame_data )
+        with writer.saving(fig, "wrong_attract.mp4", 300):
+            for i in range(len(frame_data)):
+                xycoods.set_offsets( frame_data[i] )
                 ax.set_title("Relaxation step "+str(i))
                 writer.grab_frame()
             fig.clf()
     else:
         plt.cla()
-        for i in range(len(data[:90])):
-            frame_data = str2array(data[i][1:-1])
-            distances = get_closest_neighbour_distance(frame_data)
+        for i in range(len(frame_data)):
+            distances = get_closest_neighbour_distance(frame_data[i])
             des = describe(distances)
             if des.minmax[0]<0.074:
                 print(des)

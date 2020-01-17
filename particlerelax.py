@@ -16,7 +16,7 @@ handler = logger.addHandler(logHandler)
 #given array of points as all_points
 RAD = 0.15
 quadrature = lambda lst : sqrt(sum([i**2 for i in lst]))
-REF_STEP_SIZE = 1 # oscillations occurs for anything above 0.15, even if they started off near equilibrium.
+REF_STEP_SIZE = 1 
 RESOLUTION = 1200
 #determine when to stop iterating.
 area_sextant = pi*(radius_max**2 - radius_min**2)/6
@@ -50,7 +50,7 @@ class Point:
 	def get_force_raw(self, all_points):
 		#exclude itself
 		wall_force = self.wall_repel()
-		force = [wall_force,]
+		force = ary([wall_force,])
 		
 		for p in all_points:
 			if not all(p.pos== self.pos): # for all points that isn't itself:

@@ -5,11 +5,11 @@ from scipy.stats import describe
 import logging
 logger = logging.getLogger(__name__) #created logger with NOSET level of logging, i.e. all messages are recorded.
 logger.setLevel(logging.DEBUG)
-logHandler = logging.FileHandler('interframe_relax.log')
+logHandler = logging.FileHandler('attract_original.log')
 handler = logger.addHandler(logHandler)
 
-REF_STEP_SIZE = 0.5
-START_FROM_PRISTINE = False
+REF_STEP_SIZE = 0.8
+START_FROM_PRISTINE = True
 RESOLUTION = 100
 
 def str2array(l):
@@ -66,11 +66,11 @@ class Slice:
 if __name__=='__main__':
     if START_FROM_PRISTINE:
         circle = tessellate_circle_properly(417)
-        data = []
+        data_trimmed = []
         for theta in np.linspace(0, tau, RESOLUTION):
             rotated_circle = rotate_list_of_points(circle, theta)
             transformed_list = circle_to_sextant(rotated_circle)
-            data.append(rotated_circle)
+            data_trimmed.append(rotated_circle)
     else:
         with open('single_cable_data.txt', 'r') as f:
             data = ('').join(f.readlines()).replace('\n','').replace(']],',']]\n').split('\n')
@@ -97,5 +97,5 @@ if __name__=='__main__':
         for i in range(len(data_trimmed)):
             column[i].walk( ary(column_force)[i]*REF_STEP_SIZE )
         # logger.info("finished step "+str(step))
-        np.save('attract_result.npy', column)
+        np.save('attract_original.npy', column)
         step += 1 

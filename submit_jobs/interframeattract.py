@@ -5,7 +5,7 @@ from scipy.stats import describe
 import logging
 logger = logging.getLogger(__name__) #created logger with NOSET level of logging, i.e. all messages are recorded.
 logger.setLevel(logging.DEBUG)
-logHandler = logging.FileHandler('interframe_relax.log')
+logHandler = logging.FileHandler('attract_relaxed.log')
 handler = logger.addHandler(logHandler)
 
 REF_STEP_SIZE = 0.5
@@ -31,7 +31,7 @@ class Slice:
     def __init__(self, list_of_points, ak=attract_kernel):
         self.points = []
         self.ak_raw = ak
-        self.weaken_factor = 1
+        self.weaken_factor = 0.4
         for p in list_of_points:
             #each one should be a Point object
             self.points.append(p)
@@ -97,5 +97,5 @@ if __name__=='__main__':
         for i in range(len(data_trimmed)):
             column[i].walk( ary(column_force)[i]*REF_STEP_SIZE )
         # logger.info("finished step "+str(step))
-        np.save('attract_result.npy', column)
+        np.save('attract_relaxed.npy', column)
         step += 1 
