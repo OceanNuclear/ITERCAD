@@ -6,7 +6,7 @@ from ConvrgenceVideo import get_outline
 from create_spiral import get_closest_neighbour_distance
 from scipy.stats import describe
 
-VIDEO = True
+VIDEO = False
 READ_FROM_HUMAN_READABLE_FILE= False
 
 target_r_min_to_r_max_ratio = 0.45/1.985 #both radii measurements were recorded in mm.
@@ -26,6 +26,15 @@ def str2array(l):
             text[p] += i 
     return ary([np.fromstring(entry.lstrip(', '), sep=',') for entry in text])
 
+def check_in_bound(p):
+    dist_from_centre = quadrature(p)
+    if abs(p[1]/p[0])>tan(pi/6):
+        return True
+    elif (dist_from_centre>radius_max) or (dist_from_centre<radius_min):
+        return True
+    else:
+        return False
+
 if __name__=='__main__':
     frame_data = []
     if READ_FROM_HUMAN_READABLE_FILE:
@@ -35,12 +44,12 @@ if __name__=='__main__':
             frame_data.append(str2array(data[i][1:-1]))
     else:
         from interframeattract import *
-        column = np.load('simple_attract_result.npy', allow_pickle=True)
+        column = np.load('repel_result.npy', allow_pickle=True)
         for i in range(len(column)):
             frame_data.append( [column[i].points[j].pos for j in range(column[i].num_points)] )
 
     FFMpegWriter = manimation.writers['ffmpeg']
-    metadata = dict(title='wrong_attract', artist='Matplotlib', comment='No interframe attraction applied')
+    metadata = dict(title='short_repel', artist='Matplotlib', comment='100 frames, Triple repel')
     writer = FFMpegWriter(fps=15, metadata=metadata)
     fig, ax = plt.subplots()
     ax.set_aspect(1.0)
@@ -53,10 +62,10 @@ if __name__=='__main__':
     xycoods = ax.scatter(np.ones(417), np.zeros(417))
                
     if VIDEO:
-        with writer.saving(fig, "wrong_attract.mp4", 300):
+        with writer.saving(fig, "short_repel.mp4", 300):
             for i in range(len(frame_data)):
                 xycoods.set_offsets( frame_data[i] )
-                ax.set_title("Relaxation step "+str(i))
+                ax.set_title("Layer "+str(i))
                 writer.grab_frame()
             fig.clf()
     else:
@@ -64,8 +73,10 @@ if __name__=='__main__':
         for i in range(len(frame_data)):
             distances = get_closest_neighbour_distance(frame_data[i])
             des = describe(distances)
-            if des.minmax[0]<0.074:
-                print(des)
+            print(des)
+            if sum(n:=[ check_in_bound(p) for p in frame_data[i] ])>0:
+                print("Out of bounds points = ")
+                print(np.argwhere(n))
             # plt.hist(distances, bins=100)
             # plt.title("spacing for frame"+str(i))
             # plt.show()
