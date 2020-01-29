@@ -5,14 +5,14 @@ from scipy.stats import describe
 import logging
 logger = logging.getLogger(__name__) #created logger with NOSET level of logging, i.e. all messages are recorded.
 logger.setLevel(logging.DEBUG)
-logHandler = logging.FileHandler('attract_under_original.log')
+logHandler = logging.FileHandler('attract_underrelaxed_short.log')
 handler = logger.addHandler(logHandler)
 
 REF_STEP_SIZE = 1
 DIAMETER = 0.035886910451285364*2
 MAX_REF_STEP_SIZE = DIAMETER
-START_FROM_PRISTINE = True
-RESOLUTION = 1200
+START_FROM_PRISTINE = False
+RESOLUTION = 600
 
 def str2array(l):
     p=0
@@ -31,10 +31,11 @@ def attract_kernel(x):
     return -(abs(f)+f)/2
 
 def underrelaxer(x, width=RAD/MAX_REF_STEP_SIZE):
-    #ceiling 
     scale_factor = 1/width
-    strict_func = lambda s : inv_kernel( np.clip(s*scale_factor, 0, width) )
-    lenient_func = lambda s : np.clip(sqrt(x), 0, 1)
+    def strict_func(s):
+        s = np.clip(s, 0 ,width)*scale_factor
+        return s*inv_kernel(1-s)
+    lenient_func = lambda s : 1/sqrt(np.clip(x, 1, None))
     return (strict_func(x)+ lenient_func(x))/2
 
 class Slice:
@@ -108,5 +109,5 @@ if __name__=='__main__':
         for i in range(len(data_trimmed)):
             column[i].walk( ary(column_force)[i]*step_size )
         # logger.info("finished step "+str(step))
-        np.save('attract_under_original.npy', column)
+        np.save('attract_underrelaxed_short.npy', column)
         step += 1 
