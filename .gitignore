@@ -1,0 +1,5 @@
+__pycache__/
+*.npy
+# Don't commit them since they're outside of the data/ directory
+*.mp4
+
