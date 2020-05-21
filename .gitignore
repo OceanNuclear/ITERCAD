@@ -3,3 +3,6 @@ __pycache__/
 # Don't commit them since they're outside of the data/ directory
 *.mp4
 
+submit_jobs/
+video/
+*.log
