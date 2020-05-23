@@ -55,7 +55,7 @@ if __name__=='__main__':
             frame_data.append(str2array(data[i][1:-1]))
     else:
         from interframeattract import *
-        column = np.load('submit_jobs/run4/repel_result_stronger.npy', allow_pickle=True)
+        column = np.load('data/repel_result_stronger.npy', allow_pickle=True)
         # coordinates = []
         # for s in column:
         #     coordinates.append([p.pos for p in in s.points])
