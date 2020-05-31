@@ -172,13 +172,13 @@ def wall_repel(column):
     lower_wall = (EFF_RADIUS - lower_wall_dist) * populate_with_vector(lower_wall_dist <  EFF_RADIUS, [ 1/sqrt(5), 2/sqrt(5)])
     return inner_wall, outer_wall, upper_wall, lower_wall
 
-def attract_above_below(column):
+def attract(column, height):
     """
     Find the velocity vectors contributed
     by the attraction of each point
     by the corresponding point to the slice above itself.
     """
-    return (ary(column-np.roll(column,-1, axis=0)), ary(column-np.roll(column, 1, axis=0)))
+    return ary(column-np.roll(column,-height, axis=0))
      # using s-t instead of t-s since we're trying to do attraction instead.
 
 def create_test_data(random=False):
@@ -225,7 +225,10 @@ if __name__=='__main__':
         lower_repel = repel_dense(real_data, np.roll(real_data,  1, axis=0), RAD=EFF_RADIUS*0.95)
         wall_vel_vecs = wall_repel(real_data)
 
-        upper_attract, lower_attract = attract_above_below(real_data)
+        two_above = attract(real_data, 2)
+        one_above = attract(real_data, 1)
+        one_below = attract(real_data, -1)
+        two_below = attract(real_data, -2)
 
         final_velocity, weights = [], []
         for forces in (self_repel, upper_repel, lower_repel):
@@ -233,11 +236,11 @@ if __name__=='__main__':
             weights.append(max_vecs)
             final_velocity.append(sum_vel)
         for ind, (vel, max_vecs) in enumerate(zip(final_velocity, weights)):
-            real_data += vel * max_vecs/sum(weights) * 0.4
+            real_data += vel * max_vecs/sum(weights)/2 * 0.4
 
         for this_wall_vec in wall_vel_vecs:
             real_data += lay_out_wall_vel_vecs(this_wall_vec)*0.4 #amplify the forces from the walls back to 1 instead of 0.25
-        real_data += (upper_attract+lower_attract)/2 * 0.05
+        real_data += ((one_above+one_below)/2 + (two_above+two_below))* 0.05
 
         # average_movement = mean_vel_vector(self_repel, upper_repel, lower_repel, upper_attract, lower_attract, *wall_vel_vecs)
         # real_data += average_movement
@@ -251,5 +254,5 @@ if __name__=='__main__':
         # print(describe(upper_attract[0]))
 
         # # breaking
-        if num_steps == 15:
+        if num_steps == 24:
             break
