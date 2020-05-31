@@ -178,7 +178,7 @@ def attract(column, height):
     by the attraction of each point
     by the corresponding point to the slice above itself.
     """
-    return ary(column-np.roll(column,-height, axis=0))
+    return ary(np.roll(column,-height, axis=0) - column)
      # using s-t instead of t-s since we're trying to do attraction instead.
 
 def create_test_data(random=False):
@@ -203,56 +203,60 @@ def lay_out_wall_vel_vecs(this_wall_vec):
     """
     return ary([ary([vec.copy() if len(vec) else ary([0,0]) for vec in wall_rep.flatten()]) for wall_rep in this_wall_vec]).reshape([*this_wall_vec.shape, 2])
 
+def take_step(underrelaxation_factor, wall_factor, attract_factor, weaken_attract=0.5):
+    global real_data
+    self_repel = repel_dense(real_data, real_data)
+    upper_repel = repel_dense(real_data, np.roll(real_data, -1, axis=0), RAD=EFF_RADIUS*0.95)
+    lower_repel = repel_dense(real_data, np.roll(real_data,  1, axis=0), RAD=EFF_RADIUS*0.95)
+    final_velocity, weights = [], []
+    for forces in (self_repel, upper_repel, lower_repel):
+        sum_vel, max_vecs = lay_out_vel_vecs(forces)
+        weights.append(max_vecs)
+        final_velocity.append(sum_vel)
+
+    wall_vel_vecs = wall_repel(real_data)
+
+    two_above = attract(real_data, 2)
+    one_above = attract(real_data, 1)
+    one_below = attract(real_data, -1)
+    two_below = attract(real_data, -2)
+
+    #adding the changes
+    for ind, (vel, max_vecs) in enumerate(zip(final_velocity, weights)):
+        real_data += vel * max_vecs/sum(weights) * underrelaxation_factor
+
+    for this_wall_vec in wall_vel_vecs:
+        real_data += lay_out_wall_vel_vecs(this_wall_vec) * wall_factor #amplify the forces from the walls back to 1 instead of 0.25
+
+    real_data += ((one_above+one_below)+(two_above+two_below)*weaken_attract)* attract_factor
+
+    # average_movement = mean_vel_vector(self_repel, upper_repel, lower_repel, upper_attract, lower_attract, *wall_vel_vecs)
+    # real_data += average_movement
+
+    print("weights = ", weights)
+    # print(describe(calc_dist(self_repel).flatten()))
+# circle = tessellate_circle_properly(417)
+# real_data = []
+# for theta in np.linspace(0, tau, RESOLUTION):
+#     rotated_circle = rotate_list_of_points(circle, theta)
+#     transformed_list = circle_to_sextant(rotated_circle)
+#     real_data.append(transformed_list)
+# real_data = ary(real_data)
+# np.save('PRESTINE.npy', real_data)
+
 if __name__=='__main__':
     starttime=time.time()
-    # circle = tessellate_circle_properly(417)
-    # real_data = []
-    # for theta in np.linspace(0, tau, RESOLUTION):
-    #     rotated_circle = rotate_list_of_points(circle, theta)
-    #     transformed_list = circle_to_sextant(rotated_circle)
-    #     real_data.append(transformed_list)
-    # real_data = ary(real_data)
-    # np.save('PRESTINE.npy', real_data)
 
     real_data = np.load('PRESTINE.npy')
-    # data = create_test_data()
     num_steps = 0
     print('Starting at time', time.time()-starttime, 's')
 
-    while (num_steps:=num_steps+1):
-        self_repel = repel_dense(real_data, real_data)
-        upper_repel = repel_dense(real_data, np.roll(real_data, -1, axis=0), RAD=EFF_RADIUS*0.95)
-        lower_repel = repel_dense(real_data, np.roll(real_data,  1, axis=0), RAD=EFF_RADIUS*0.95)
-        wall_vel_vecs = wall_repel(real_data)
-
-        two_above = attract(real_data, 2)
-        one_above = attract(real_data, 1)
-        one_below = attract(real_data, -1)
-        two_below = attract(real_data, -2)
-
-        final_velocity, weights = [], []
-        for forces in (self_repel, upper_repel, lower_repel):
-            sum_vel, max_vecs = lay_out_vel_vecs(forces)
-            weights.append(max_vecs)
-            final_velocity.append(sum_vel)
-        for ind, (vel, max_vecs) in enumerate(zip(final_velocity, weights)):
-            real_data += vel * max_vecs/sum(weights) * 0.4
-
-        for this_wall_vec in wall_vel_vecs:
-            real_data += lay_out_wall_vel_vecs(this_wall_vec)*0.4 #amplify the forces from the walls back to 1 instead of 0.25
-        real_data += ((one_above+one_below)/2 + (two_above+two_below))* 0.05
-
-        # average_movement = mean_vel_vector(self_repel, upper_repel, lower_repel, upper_attract, lower_attract, *wall_vel_vecs)
-        # real_data += average_movement
-
+    for num_steps in range(10):
+        take_step(underrelaxation_factor=0.4, wall_factor=0.2, attract_factor=0.05)
         print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
         np.save('repel_attract.npy', real_data)
 
-        # # printing information:
-        # print(describe(lower_attract[0]))
-        # print(describe(upper_attract[0]))
-        # print(describe(upper_attract[0]))
-
-        # # breaking
-        if num_steps == 24:
-            break
+    while (num_steps:=num_steps+1):
+        take_step(underrelaxation_factor=0.4, wall_factor=0.2, attract_factor=0.1)
+        print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
+        np.save('repel_attract.npy', real_data)
