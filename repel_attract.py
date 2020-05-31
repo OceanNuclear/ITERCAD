@@ -234,7 +234,7 @@ if __name__=='__main__':
             final_velocity.append(sum_vel)
         for this_wall_vec in wall_vel_vecs:
             weights.append(1)
-            final_velocity.append(lay_out_wall_vel_vecs(this_wall_vec))
+            final_velocity.append(lay_out_wall_vel_vecs(this_wall_vec)*3)
 
         for vel, max_vecs in zip(final_velocity, weights):
             real_data += vel * max_vecs/sum(weights) * 0.4
