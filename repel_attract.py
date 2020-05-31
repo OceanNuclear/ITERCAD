@@ -232,14 +232,16 @@ if __name__=='__main__':
             sum_vel, max_vecs = lay_out_vel_vecs(forces)
             weights.append(max_vecs)
             final_velocity.append(sum_vel)
-        for ind, (vel, max_vecs) in enumerate(zip(final_velocity, weights)):
-            real_data += vel * max_vecs/sum(weights) * 0.4
-
         for this_wall_vec in wall_vel_vecs:
-            real_data += lay_out_wall_vel_vecs(this_wall_vec)/2 * 0.4 #amplify the forces from the walls back to 1 instead of 0.25
+            weights.append(1)
+            final_velocity.append(lay_out_wall_vel_vecs(this_wall_vec))
+
+        for vel, max_vecs in zip(final_velocity, weights):
+            real_data += vel * max_vecs/sum(weights) * 0.4
         # The setting (0.3, 0.1 worked for 26 steps, but then started diverging soon after)
         
         real_data += (upper_attract+lower_attract)/2 * 0.05
+
         # average_movement = mean_vel_vector(self_repel, upper_repel, lower_repel, upper_attract, lower_attract, *wall_vel_vecs)
         # real_data += average_movement
 
