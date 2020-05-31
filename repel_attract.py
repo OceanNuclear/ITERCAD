@@ -252,11 +252,11 @@ if __name__=='__main__':
     print('Starting at time', time.time()-starttime, 's')
 
     for num_steps in range(10):
-        take_step(underrelaxation_factor=0.4, wall_factor=0.2, attract_factor=0.05)
+        take_step(underrelaxation_factor=0.4, wall_factor=0.2, attract_factor=0.02)
         print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
         np.save('repel_attract.npy', real_data)
 
     while (num_steps:=num_steps+1):
-        take_step(underrelaxation_factor=0.4, wall_factor=0.2, attract_factor=0.1)
+        take_step(underrelaxation_factor=0.2, wall_factor=0.1, attract_factor=0.02)
         print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
         np.save('repel_attract.npy', real_data)

@@ -41,15 +41,25 @@ class Point:
         #self.closest_point = self.radius_of_effectiveness.copy() #for tracking where is the nearest particle
         
     def point_kernel(self, dist):
+        """
+        The force profile supplied by other points.
+        The raw kernel (pk_raw) is rescaled so that the function remains undistored, only enlarged/shrunken.
+        """
         scaled_dist = dist/self.radius_of_effectiveness
-        return self.radius_of_effectiveness* self.pk_raw(scaled_dist) #again, these are meant to keep its slope = -1
+        return self.radius_of_effectiveness* self.pk_raw(scaled_dist)
         
     def wall_kernel(self, dist):
+        """
+        The 'force' profile supplied by the wall
+        The raw kernel (wk_raw) is rescaled so that the function remains undistored, only enlarged/shrunken.
+        """
         scaled_dist = dist/self.wall_effect_thickness
-        return self.wall_effect_thickness * self.wk_raw(scaled_dist) #again, these are meant to keep its slope = -1
+        return self.wall_effect_thickness * self.wk_raw(scaled_dist)
         
     def get_force(self, all_points):
-        #exclude itself
+        """
+        Find the forces acting upon this wire by its neighbours
+        """
         force = ary([[0.,0.],])
         
         for p in all_points:
@@ -66,6 +76,9 @@ class Point:
         return [ sum(force[:,0])/len(force), sum(force[:,1])/len(force) ]
 
     def wall_repel(self):
+        """
+        Find the force acted upon itself by the walls (if it's close enough to the walls)
+        """
         force = ary([0., 0.])
         # tangential walls' repulsion
         if quadrature(self.pos) < radius_min + self.wall_effect_thickness: # close to the centre of the cable
@@ -88,9 +101,11 @@ class Point:
         return force
     
     def walk(self, step):
+        '''update its position by adding a numpy array of length=2'''
         self.pos += step
 
 def get_outline(resolution = RESOLUTION):
+    '''Get the sextant sheath outline, which is useful for plotting'''
     radians = np.linspace( 0, 2*pi, resolution)
     original_circle = [ [cos(theta), sin(theta)] for theta in radians ]
     outline = circle_to_sextant(original_circle)
@@ -101,11 +116,11 @@ def easy_logspace(start, stop, num):
 
 if __name__=="__main__":
     circle = tessellate_circle_properly(417)
-    print("Using reference step size={0}, RAD = {1}".format(REF_STEP_SIZE, RAD))
+    print("Using reference step size={0}, RAD = {1}".format(REF_STEP_SIZE, RAD)) # step size reference
     cable = [] #sorted by [layer=theta][strand_number][xy_coords]
-    start_t = time()
+    start_t = time() # begin timing the program run time
 
-    for theta in np.linspace(0, tau, RESOLUTION): #
+    for theta in np.linspace(0, tau, RESOLUTION): 
         new_circle = rotate_list_of_points(circle, theta)
         sextant = ary(circle_to_sextant(new_circle))
         

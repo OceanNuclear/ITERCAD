@@ -8,6 +8,7 @@ from scipy.stats import describe
 
 VIDEO = True
 READ_FROM_HUMAN_READABLE_FILE= False
+READ_FROM_SIMPL_NPY = True
 EVERY_NTH_FRAME=1
 
 target_r_min_to_r_max_ratio = 0.45/1.985 #both radii measurements were recorded in mm.
@@ -16,6 +17,10 @@ radius_max = sqrt(offset_constant_in_sqrt+12)/sqrt(pi)
 radius_min = sqrt(offset_constant_in_sqrt-12)/sqrt(pi)
 
 def str2array(l):
+    '''
+    Function for reading data (stored as plain text) into numpy array
+    '''
+
     p=0
     text = ['',]*l.count(']') 
     for i in l: 
@@ -38,6 +43,9 @@ def str2array(l):
 #     return slice_here
 
 def check_in_bound(p):
+    '''
+    Check if the point p is inside the sextant or not, and return a boolean.
+    '''
     dist_from_centre = quadrature(p)
     if abs(p[1]/p[0])>tan(pi/6):
         return True
@@ -53,9 +61,11 @@ if __name__=='__main__':
             data = ('').join(f.readlines()).replace('\n','').replace(']],',']]\n').split('\n')
         for i in range(len(data)):
             frame_data.append(str2array(data[i][1:-1]))
+    elif READ_FROM_SIMPL_NPY:
+        frame_data = np.load('repel_attract.npy')[::2]
     else:
         from interframeattract import *
-        column = np.load('data/repel_result_stronger.npy', allow_pickle=True)
+        column = np.load('', allow_pickle=True)
         # coordinates = []
         # for s in column:
         #     coordinates.append([p.pos for p in in s.points])
@@ -78,7 +88,7 @@ if __name__=='__main__':
     xycoods3 = ax.scatter(np.ones(417)[2::3], np.zeros(417)[2::3])
                
     if VIDEO:
-        with writer.saving(fig, "linear_result_stronger.mp4", 300):
+        with writer.saving(fig, "repel_attract.mp4", 300):
             for i in range(len(frame_data)):
                 if i%EVERY_NTH_FRAME==0:
                     xycoods1.set_offsets( frame_data[i][::3] )

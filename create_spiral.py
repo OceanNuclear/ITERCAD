@@ -17,6 +17,7 @@ aesthetic_offset_angle = angle_between_sextant
 
 #### basic functions
 def get_theta(frame_num):
+    '''Translate frame number back into angle corresponding to that frame of the video'''
     return tau*frame_num/num_frames
 
 def quadrature(coordinates_list):
@@ -85,7 +86,7 @@ def square_to_sexant(list_of_points, which_sextant=0):
     return transformed_list
 
 def circle_to_sextant(list_of_points):
-    intermediate_list = elliptical_grid_mapping(list_of_points)
+    intermediate_list = elliptical_grid_mapping(list_of_points) # choose the elliptical grid mapping method
     transformed_list = square_to_sexant(intermediate_list)
     return transformed_list
 
@@ -129,10 +130,12 @@ def get_z_of_central_column(theta):
     return z
 
 def Rotation2Quat(axis, angle):
+    '''Function to turn (axis-angle) representation of a rotation operatoin into a quaternion representation'''
     quat = [cos(angle/2), sin(angle/2)*axis[0], sin(angle/2)*axis[1], sin(angle/2)*axis[2]]
     return quat
 
 def Quat2R(q):
+    '''Reusing quaternion functions for simulating rotation'''
     theta = 2 * arccos(np.clip(q[0],-1,1))
 
     R = np.identity(3)
