@@ -217,7 +217,7 @@ if __name__=='__main__':
     real_data = np.load('PRESTINE.npy')
     # data = create_test_data()
     num_steps = 0
-    print('Starting at time', time.time()-starttime)
+    print('Starting at time', time.time()-starttime, 's')
 
     while (num_steps:=num_steps+1):
         self_repel = repel_dense(real_data, real_data)
@@ -239,13 +239,13 @@ if __name__=='__main__':
             real_data += vel * max_vecs/sum(weights) * 0.4
 
         for this_wall_vec in wall_vel_vecs:
-            real_data += lay_out_wall_vel_vecs(this_wall_vec)/2*0.4 #amplify the forces from the walls back to 1 instead of 0.25
+            real_data += lay_out_wall_vel_vecs(this_wall_vec)*0.4 #amplify the forces from the walls back to 1 instead of 0.25
         real_data += ((one_above+one_below)/2 + (two_above+two_below))* 0.05
 
         # average_movement = mean_vel_vector(self_repel, upper_repel, lower_repel, upper_attract, lower_attract, *wall_vel_vecs)
         # real_data += average_movement
 
-        print('Taken step={} at time={}'.format(num_steps, time.time()-starttime))
+        print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
         np.save('repel_attract.npy', real_data)
 
         # # printing information:
