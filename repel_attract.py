@@ -236,10 +236,10 @@ if __name__=='__main__':
             weights.append(max_vecs)
             final_velocity.append(sum_vel)
         for ind, (vel, max_vecs) in enumerate(zip(final_velocity, weights)):
-            real_data += vel * max_vecs/sum(weights)/2 * 0.4
+            real_data += vel * max_vecs/sum(weights) * 0.4
 
         for this_wall_vec in wall_vel_vecs:
-            real_data += lay_out_wall_vel_vecs(this_wall_vec)*0.4 #amplify the forces from the walls back to 1 instead of 0.25
+            real_data += lay_out_wall_vel_vecs(this_wall_vec)/2*0.4 #amplify the forces from the walls back to 1 instead of 0.25
         real_data += ((one_above+one_below)/2 + (two_above+two_below))* 0.05
 
         # average_movement = mean_vel_vector(self_repel, upper_repel, lower_repel, upper_attract, lower_attract, *wall_vel_vecs)
