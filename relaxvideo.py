@@ -62,7 +62,7 @@ if __name__=='__main__':
         for i in range(len(data)):
             frame_data.append(str2array(data[i][1:-1]))
     elif READ_FROM_SIMPL_NPY:
-        frame_data = np.load('repel_attract.npy')[::2]
+        frame_data = np.load('repel_attract.npy')
     else:
         from interframeattract import *
         column = np.load('', allow_pickle=True)

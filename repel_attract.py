@@ -10,6 +10,7 @@ from scipy.stats import describe
 RESOLUTION = 600
 diameter = 0.035886910451285364*2
 EFF_RADIUS = 0.15
+ST_WALL_EFF_DIST = 0.1
 MAX_REF_STEP_SIZE = diameter*1 # effective radius
 
 def calc_dist(frame):
@@ -153,7 +154,6 @@ def populate_with_vector(mask, vector):
 def wall_repel(column):
     """
     The force supplied by the walls onto the values.
-    Need to perform checks
     """
     dists = calc_dist(column) # calculate the distance of the point from the origin
     # inner_wall = get_unit_vec(column) * np.clip((radius_min + EFF_RADIUS - dists), 0, None) # only care about the one that are positive,
@@ -165,11 +165,11 @@ def wall_repel(column):
 
     upper_wall_dist = project_onto_vector(column, unit_vector=ary([-1,2])/sqrt(5))
     lower_wall_dist = project_onto_vector(column, unit_vector=ary([ 1,2])/sqrt(5))
-    upper_wall = (EFF_RADIUS + upper_wall_dist) * populate_with_vector(upper_wall_dist > -EFF_RADIUS, [ 1/sqrt(5),-2/sqrt(5)])
     # upper_wall_dist: (-C,0]
-    # EFF_RADIUS - upper_wall_dist: [EFF_RADIUS,-C+EFF_RADIUS)
-    # (EFF_RADIUS - upper_wall_dist)[upper_wall_dist+EFF_RADIUS>0]: [EFF_RADIUS, 0]
-    lower_wall = (EFF_RADIUS - lower_wall_dist) * populate_with_vector(lower_wall_dist <  EFF_RADIUS, [ 1/sqrt(5), 2/sqrt(5)])
+    # ST_WALL_EFF_DIST - upper_wall_dist: [ST_WALL_EFF_DIST,-C+ST_WALL_EFF_DIST)
+    # (ST_WALL_EFF_DIST - upper_wall_dist)[upper_wall_dist+ST_WALL_EFF_DIST>0]: [ST_WALL_EFF_DIST, 0]
+    upper_wall = (ST_WALL_EFF_DIST + upper_wall_dist) * populate_with_vector(upper_wall_dist > -ST_WALL_EFF_DIST, [ 1/sqrt(5),-2/sqrt(5)])
+    lower_wall = (ST_WALL_EFF_DIST - lower_wall_dist) * populate_with_vector(lower_wall_dist <  ST_WALL_EFF_DIST, [ 1/sqrt(5), 2/sqrt(5)])
     return inner_wall, outer_wall, upper_wall, lower_wall
 
 def attract(column, height):
@@ -204,6 +204,13 @@ def lay_out_wall_vel_vecs(this_wall_vec):
     return ary([ary([vec.copy() if len(vec) else ary([0,0]) for vec in wall_rep.flatten()]) for wall_rep in this_wall_vec]).reshape([*this_wall_vec.shape, 2])
 
 def take_step(underrelaxation_factor, wall_factor, attract_factor, weaken_attract=0.5):
+    """
+    underrelaxation_factor controls the strength of repulsive forces from-wire-to-wire.
+    wall_factor controls the repulsive forces from-wall-to-wire.
+    attract_factor controls the attractive forces from these same wire (point from the layer above and below) onto itself.
+    attract_factor * weaken_attract gives the attractive force from two layers away.
+    nominal values are:
+    """
     global real_data
     self_repel = repel_dense(real_data, real_data)
     upper_repel = repel_dense(real_data, np.roll(real_data, -1, axis=0), RAD=EFF_RADIUS*0.95)
@@ -257,6 +264,6 @@ if __name__=='__main__':
         np.save('repel_attract.npy', real_data)
 
     while (num_steps:=num_steps+1):
-        take_step(underrelaxation_factor=0.1, wall_factor=1, attract_factor=0.02)
+        take_step(underrelaxation_factor=0.1, wall_factor=1, attract_factor=0.04, weaken_attract=0)
         print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
         np.save('repel_attract.npy', real_data)
