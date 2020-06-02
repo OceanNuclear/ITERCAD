@@ -10,7 +10,9 @@ from scipy.stats import describe
 RESOLUTION = 600
 diameter = 0.035886910451285364*2
 EFF_RADIUS = 0.15
-ST_WALL_EFF_DIST = 0.1
+ST_WALL_EFF_DIST = 0.1 # the effective distance for repulsion by the inter-sextant (straight) walls
+OUTER_WALL_EFF_DIST = 0.2 # the effective distance for repulsion by the outer (round) wall
+INNER_WALL_EFF_DIST = 0.15 # the effective distance for repulsion by the inner (round) wall
 MAX_REF_STEP_SIZE = diameter*1 # effective radius
 
 def calc_dist(frame):
@@ -156,12 +158,12 @@ def wall_repel(column):
     The force supplied by the walls onto the values.
     """
     dists = calc_dist(column) # calculate the distance of the point from the origin
-    # inner_wall = get_unit_vec(column) * np.clip((radius_min + EFF_RADIUS - dists), 0, None) # only care about the one that are positive,
+    # inner_wall = get_unit_vec(column) * np.clip((radius_min + INNER_WALL_EFF_DIST - dists), 0, None) # only care about the one that are positive,
     # i.e. those that undershoot the inner wall radius.
-    # outer_wall = get_unit_vec(column) * np.clip((radius_max - EFF_RADIUS - dists), None, 0) #only care about the ones that are negative,
+    # outer_wall = get_unit_vec(column) * np.clip((radius_max - OUTER_WALL_EFF_DIST - dists), None, 0) #only care about the ones that are negative,
     # i.e. those that overshoot the outer wall radius.
-    inner_wall = apply_mask_on_custom( get_unit_vec(column), dists<(radius_min + EFF_RADIUS) ) * (radius_min + EFF_RADIUS - dists)
-    outer_wall = apply_mask_on_custom( get_unit_vec(column), dists>(radius_max - EFF_RADIUS) ) * (radius_max - EFF_RADIUS - dists)
+    inner_wall = apply_mask_on_custom( get_unit_vec(column), dists<(radius_min + INNER_WALL_EFF_DIST) ) * (radius_min + INNER_WALL_EFF_DIST - dists)
+    outer_wall = apply_mask_on_custom( get_unit_vec(column), dists>(radius_max - OUTER_WALL_EFF_DIST) ) * (radius_max - OUTER_WALL_EFF_DIST - dists)
 
     upper_wall_dist = project_onto_vector(column, unit_vector=ary([-1,2])/sqrt(5))
     lower_wall_dist = project_onto_vector(column, unit_vector=ary([ 1,2])/sqrt(5))
@@ -255,7 +257,6 @@ if __name__=='__main__':
     starttime=time.time()
 
     real_data = np.load('PRESTINE.npy')
-    num_steps = 0
     print('Starting at time', time.time()-starttime, 's')
 
     for num_steps in range(10):
@@ -263,7 +264,9 @@ if __name__=='__main__':
         print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
         np.save('repel_attract.npy', real_data)
 
-    while (num_steps:=num_steps+1):
-        take_step(underrelaxation_factor=0.1, wall_factor=1, attract_factor=0.04, weaken_attract=0)
+    # for num_steps in range(num_steps, 100): 
+    while True:
+        num_steps += 1
+        take_step(underrelaxation_factor=0.15, wall_factor=1.5, attract_factor=0.05, weaken_attract=0.5)
         print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
         np.save('repel_attract.npy', real_data)
