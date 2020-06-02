@@ -11,7 +11,7 @@ The distribution of wire is found by FEM, by relaxing from an initial distributi
 Of course, it would be too convenient if this initial distribution is already optimum (i.e. matches reality). But it is not, since some wires are packed more tightly than others in this distribution. Therefore we spread out these wires in the following simulation using FEM-like procedures, by making them repel near-by wires.
 
 # Method
-##Initial method
+## Initial method
 417 particles confined in the sextant shape are subjected to forces from the walls and from all other points (if they are close enough, i.e. within the effective radius).
 
 They are then displaced by an amount proportional the amount of repulsion it felt. 
@@ -19,10 +19,10 @@ They are then displaced by an amount proportional the amount of repulsion it fel
 The repulsion is then re-calculated in the next iteration.
 This was repeated for each slice of the cable as we move up this cable
 
-##Underrelaxation
+## Underrelaxation
 In some cases if two particles were too close together they will experience extremely high repulsion, and fly out of bounds. To prevent this I have implemented a system that reduces the step size of the particles, reducing the step size until every particle moves less than or equal to a set distance.
 
-##Linking to other layers
+## Linking to other layers
 In the approach described above, there are no connection between layers, so the relaxation's resulting distribution of particles of two adjacent slices of the sub-cable may be wildly different. Therefore I applied 
 - Attraction between corresponding points on adjacent slices (i.e. core of wire A in slice 1 will be attracted to core of wire A in slice 2, etc.)
 - Repulsion between neighbouring slices (i.e. core of wire A will be repelled by core of wire B, C, ... in slice 2)
@@ -33,4 +33,4 @@ The first attempt used a repulsive kernel that (cot(x)). I thought this was the 
 It also used an extremely slow looping approach, where the force is calculated in a different manner, not utiliing numpy's speed by vectorization. The results were unsatisfying.
 
 # Result
-The better version is created in repel_attract.py, using a linear kernel instead (x-1). You can play the video in data/*.mp3 to check out the result of the simultaion
+The better version is created in repel_attract.py, using a linear kernel instead (x-1). You can play the video in data/*.mp4 to check out the result of the simultaion
