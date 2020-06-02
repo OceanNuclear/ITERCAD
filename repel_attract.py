@@ -10,8 +10,8 @@ from scipy.stats import describe
 RESOLUTION = 600
 diameter = 0.035886910451285364*2
 EFF_RADIUS = 0.15
-ST_WALL_EFF_DIST = 0.1 # the effective distance for repulsion by the inter-sextant (straight) walls
-OUTER_WALL_EFF_DIST = 0.2 # the effective distance for repulsion by the outer (round) wall
+ST_WALL_EFF_DIST = 0.125 # the effective distance for repulsion by the inter-sextant (straight) walls
+OUTER_WALL_EFF_DIST = 0.175 # the effective distance for repulsion by the outer (round) wall
 INNER_WALL_EFF_DIST = 0.15 # the effective distance for repulsion by the inner (round) wall
 MAX_REF_STEP_SIZE = diameter*1 # effective radius
 
