@@ -6,3 +6,5 @@ __pycache__/
 submit_jobs/
 video/
 *.log
+matt_input/
+.unused/

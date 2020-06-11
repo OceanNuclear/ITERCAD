@@ -2,7 +2,7 @@ from numpy import cos, arccos, sin, arctan, tan, pi, sqrt; from numpy import arr
 from matplotlib import pyplot as plt
 from matplotlib import animation
 import matplotlib.animation as manimation
-from ConvrgenceVideo import get_outline
+from particlerelax import get_outline
 from scipy.stats import describe
 from repel_attract import get_disp_vec, calc_dist
 VIDEO = True

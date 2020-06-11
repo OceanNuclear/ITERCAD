@@ -125,6 +125,7 @@ class Point:
 		self.pos += step
 
 def get_outline(resolution = RESOLUTION):
+	"""Get the sextant sheath outline, which is useful for plotting"""
 	radians = np.linspace( 0, 2*pi, resolution)
 	original_circle = [ [cos(theta), sin(theta)] for theta in radians ]
 	outline = circle_to_sextant(original_circle)
