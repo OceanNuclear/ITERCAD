@@ -5,6 +5,7 @@ from numpy import pi, arcsin, tan; tau = 2*pi
 import numpy as np
 from SimpleMapping import tessellate_circle_properly, rotate_list_of_points, circle_to_sextant, radius_max, radius_min
 import time
+import sys
 from scipy.stats import describe
 
 RESOLUTION = 600
@@ -58,7 +59,7 @@ def mean_vel_vector(*vel_vectors):
 
 def get_disp_vec(column, f_source):
     """
-    List of displacement vector between different points.
+    List of displacement vector from the f_source to the column.
     disp_vec[n][o][m][x_or_y]
     n: index of slice
     o: index of point experiencing the force
@@ -98,7 +99,8 @@ def repel(column):
 
 def repel_dense(target, source, RAD=EFF_RADIUS):
     """
-    Same as above, but outputs in dense represenation. It's faster this way.
+    Find the velocity contributed by all within the same layer.
+    Same as repel(), but outputs in dense represenation. It's faster this way.
     """
     disp_vec = get_disp_vec(target, source)
     dists = calc_dist(disp_vec) # boolean dists
@@ -144,7 +146,7 @@ def apply_mask_on_custom(vel_vec, mask):
 
 def populate_with_vector(mask, vector):
     """
-    Fill in a vector if applicable ('True' in mask)
+    Fill in a vector if applicable ('True' in mask).
     2x run of this function (which involves the copying operation)
     using real_data (600x417 points) took only 0.8 seconds.
     so it was deemed that the copying doesn't introduce much inefficency
@@ -155,7 +157,7 @@ def populate_with_vector(mask, vector):
 
 def wall_repel(column):
     """
-    The force supplied by the walls onto the values.
+    The force supplied by the walls onto the points.
     """
     dists = calc_dist(column) # calculate the distance of the point from the origin
     # inner_wall = get_unit_vec(column) * np.clip((radius_min + INNER_WALL_EFF_DIST - dists), 0, None) # only care about the one that are positive,
@@ -195,13 +197,13 @@ def create_test_data(random=False):
 def lay_out_vel_vecs(forces):
     """
     return lay_out_vel_vecs,
-    plus the max number of vectors acting on any point
+    plus the max number of velocity vectors acting on any point
     """
     return ary([[vel_vecs_on_pt.sum(axis=0) for vel_vecs_on_pt in this_slice] for this_slice in forces]), max([len(a) for a in forces.flatten()])
 
 def lay_out_wall_vel_vecs(this_wall_vec):
     """
-    same as above 
+    same as above, but for wall-> point force
     """
     return ary([ary([vec.copy() if len(vec) else ary([0,0]) for vec in wall_rep.flatten()]) for wall_rep in this_wall_vec]).reshape([*this_wall_vec.shape, 2])
 
@@ -239,11 +241,43 @@ def take_step(underrelaxation_factor, wall_factor, attract_factor, weaken_attrac
 
     real_data += ((one_above+one_below)+(two_above+two_below)*weaken_attract)* attract_factor
 
-    # average_movement = mean_vel_vector(self_repel, upper_repel, lower_repel, upper_attract, lower_attract, *wall_vel_vecs)
-    # real_data += average_movement
-
     print("weights = ", weights)
     # print(describe(calc_dist(self_repel).flatten()))
+
+def take_step_include_interp(underrelaxation_factor, wall_factor, attract_factor, weaken_attract=0.5):
+    """
+    Same as above, except upper_repel_half and lower_repel_half is added
+    """
+    global real_data
+    self_repel = repel_dense(real_data, real_data)
+    upper_repel = repel_dense(real_data, np.roll(real_data, -1, axis=0), RAD=EFF_RADIUS*0.95)
+    upper_repel_half = repel_dense(real_data, (real_data+np.roll(real_data, -1, axis=0))/2, RAD=EFF_RADIUS*0.95)
+    lower_repel = repel_dense(real_data, np.roll(real_data,  1, axis=0), RAD=EFF_RADIUS*0.95)
+    lower_repel_half = repel_dense(real_data, (real_data+np.roll(real_data,  1, axis=0))/2, RAD=EFF_RADIUS*0.95)
+    final_velocity, weights = [], []
+    for forces in (self_repel, upper_repel, lower_repel, upper_repel_half, lower_repel_half):
+        sum_vel, max_vecs = lay_out_vel_vecs(forces)
+        weights.append(max_vecs)
+        final_velocity.append(sum_vel)
+
+    wall_vel_vecs = wall_repel(real_data)
+
+    two_above = attract(real_data, 2)
+    one_above = attract(real_data, 1)
+    one_below = attract(real_data, -1)
+    two_below = attract(real_data, -2)
+
+    #adding the changes
+    for ind, (vel, max_vecs) in enumerate(zip(final_velocity, weights)):
+        real_data += vel * max_vecs/sum(weights) * underrelaxation_factor
+
+    for this_wall_vec in wall_vel_vecs:
+        real_data += lay_out_wall_vel_vecs(this_wall_vec) * wall_factor #amplify the forces from the walls back to 1 instead of 0.25
+
+    real_data += ((one_above+one_below)+(two_above+two_below)*weaken_attract)* attract_factor
+
+    print("weights = ", weights)
+
 # circle = tessellate_circle_properly(417)
 # real_data = []
 # for theta in np.linspace(0, tau, RESOLUTION):
@@ -256,17 +290,32 @@ def take_step(underrelaxation_factor, wall_factor, attract_factor, weaken_attrac
 if __name__=='__main__':
     starttime=time.time()
 
-    real_data = np.load('PRESTINE.npy')
-    print('Starting at time', time.time()-starttime, 's')
+    if sys.argv[-1].endswith('.py'):
+        print('Starting from PRESTINE file')
+        real_data = np.load('PRESTINE.npy')
+    else:
+        print('Starting from file', sys.argv[-1])
+        real_data = np.load(sys.argv[-1]) # use the commandline argument provided as starting point
+    print('starting at time', time.time()-starttime, 's')
 
-    for num_steps in range(10):
-        take_step(underrelaxation_factor=0.2, wall_factor=2, attract_factor=0.02)
-        print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
-        np.save('repel_attract.npy', real_data)
+    # start with a smaller, more careful relaxation with a larger wall repulsion if starting from the PRESTINE distribution
+    if sys.argv[-1].endswith('.py'):
+        for num_steps in range(10):
+            take_step(underrelaxation_factor=0.2, wall_factor=2, attract_factor=0.02)
+            print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
+            np.save('repel_attract.npy', real_data)
 
     # for num_steps in range(num_steps, 100): 
+    else:
+        num_steps = 0
+    if 'interp' in sys.argv:
+        print('Adding in repulsion from the interpolated slice as well')    
     while True:
         num_steps += 1
-        take_step(underrelaxation_factor=0.15, wall_factor=1.5, attract_factor=0.05, weaken_attract=0.5)
+        if 'interp' in sys.argv:
+            take_step_include_interp(underrelaxation_factor=0.15, wall_factor=0.05, attract_factor=0.05, weaken_attract=0.5)
+            
+        else:
+            take_step(underrelaxation_factor=0.15, wall_factor=1.5, attract_factor=0.05, weaken_attract=0.5)
         print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
         np.save('repel_attract.npy', real_data)

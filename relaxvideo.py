@@ -3,9 +3,8 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 import matplotlib.animation as manimation
 from ConvrgenceVideo import get_outline
-from create_spiral import get_closest_neighbour_distance
 from scipy.stats import describe
-
+from repel_attract import get_disp_vec, calc_dist
 VIDEO = True
 READ_FROM_HUMAN_READABLE_FILE= False
 READ_FROM_SIMPL_NPY = True
@@ -62,7 +61,12 @@ if __name__=='__main__':
         for i in range(len(data)):
             frame_data.append(str2array(data[i][1:-1]))
     elif READ_FROM_SIMPL_NPY:
-        frame_data = np.load('repel_attract.npy')
+        import sys
+        if len(sys.argv)>1:
+            mask = ary([int(i) for i in sys.argv[1:]], dtype=int)
+            frame_data = np.load('repel_attract.npy')[:, mask, :]
+        else:
+            frame_data = np.load('repel_attract.npy')
     else:
         from interframeattract import *
         column = np.load('', allow_pickle=True)
@@ -86,7 +90,15 @@ if __name__=='__main__':
     xycoods1 = ax.scatter(np.ones(417)[::3], np.zeros(417)[::3])
     xycoods2 = ax.scatter(np.ones(417)[1::3], np.zeros(417)[1::3])
     xycoods3 = ax.scatter(np.ones(417)[2::3], np.zeros(417)[2::3])
-               
+    
+    distances_of_column = calc_dist(get_disp_vec(frame_data, frame_data))
+    min_dists = []
+    for dist_of_slice in distances_of_column:
+        np.fill_diagonal(dist_of_slice, max(dist_of_slice.flatten()))
+        min_dists.append(dist_of_slice.min().copy())
+
+    print(describe(min_dists))
+
     if VIDEO:
         with writer.saving(fig, "repel_attract.mp4", 300):
             for i in range(len(frame_data)):
@@ -100,7 +112,7 @@ if __name__=='__main__':
     else:
         plt.cla()
         for i in range(len(frame_data)):
-            distances = get_closest_neighbour_distance(frame_data[i])
+            distances = calc_dist(get_disp_vec(frame_data[i]))
             # frame_data[i+1], frame_data[i-1]
             des = describe(distances)
             print(des)
