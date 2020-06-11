@@ -237,7 +237,7 @@ def take_step(underrelaxation_factor, wall_factor, attract_factor, weaken_attrac
         real_data += vel * max_vecs/sum(weights) * underrelaxation_factor
 
     for this_wall_vec in wall_vel_vecs:
-        real_data += lay_out_wall_vel_vecs(this_wall_vec) * wall_factor/sum(weights) #amplify the forces from the walls back to 1 instead of 0.25
+        real_data += lay_out_wall_vel_vecs(this_wall_vec) * wall_factor #amplify the forces from the walls back to 1 instead of 0.25
 
     real_data += ((one_above+one_below)+(two_above+two_below)*weaken_attract)* attract_factor
 
@@ -312,10 +312,20 @@ if __name__=='__main__':
         print('Adding in repulsion from the interpolated slice as well')    
     while True:
         num_steps += 1
+        TINY_STEP = 0.05
         if 'interp' in sys.argv:
-            take_step_include_interp(underrelaxation_factor=0.15, wall_factor=0.05, attract_factor=0.05, weaken_attract=0.5)
+            take_step_include_interp(
+                underrelaxation_factor=3*TINY_STEP,
+                wall_factor     = TINY_STEP,
+                attract_factor  = TINY_STEP,
+                weaken_attract  = 0.5)
             
         else:
-            take_step(underrelaxation_factor=0.15, wall_factor=1.5, attract_factor=0.05, weaken_attract=0.5)
+            take_step(
+                underrelaxation_factor=3*TINY_STEP,
+                wall_factor     = TINY_STEP,
+                attract_factor  = TINY_STEP,
+                weaken_attract  = 0.5)
+            
         print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
         np.save('repel_attract.npy', real_data)
