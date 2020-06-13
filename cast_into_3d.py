@@ -4,7 +4,7 @@ tau = 2*pi
 import numpy as np;
 from matplotlib import pyplot as plt
 from SimpleMapping import radius_max
-
+import sys
 height_of_twist = 75.6 #mm
 outer_radius_of_cable = 1.98 #mm
 # inner_radius_of_cable = 0.45 #mm
@@ -21,8 +21,14 @@ def rotation_mat(theta):
     ])
 
 if __name__=='__main__':
-    real_data = np.load('repel_attract.npy') #open the shape==(600, 417, 2) data
-    zlist = np.linspace(0, HEIGHT_OF_TWIST, len(real_data), endpoint=True) # assign appropriate height (in mm)
+    if len(sys.argv[1:])==1:
+        skip_arg = int(sys.argv[1])
+        filename = 'repel_attract_skip{}.npy'.format(skip_arg)
+    else:
+        filename = 'repel_attract.npy'
+    print('loading file', filename)
+    real_data = np.load(filename) #open the shape==(600, 417, 2) data
+    zlist = np.linspace(0, HEIGHT_OF_TWIST, len(real_data), endpoint=False) # assign appropriate height (in mm)
     thetalist = np.linspace(0, tau, len(real_data), endpoint=False)
     threeDdata = []
     for twoDlist, z, theta in zip(real_data, zlist, thetalist):

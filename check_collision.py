@@ -9,14 +9,20 @@ import time
 from numpy.linalg import inv, norm
 from collections import defaultdict
 from SimpleMapping import radius_min, radius_max
-COLLISION_RAD = 0.040
 
-def add(longer_array, shorter_array):
-    longer_array.T + shorter_array[:,]
+area = (radius_max**2 - radius_min**2)*pi/6
+absolute_max_area_per_wire = area/417 # absolute maximum cross-section of each wire if they can be deformed
+square_packing_max_area = absolute_max_area_per_wire*pi/4
+area_assumed = square_packing_max_area * 0.4
+radius_assumed = sqrt(area_assumed/pi)
+DIAMETER = radius_assumed*2
 
 if __name__=='__main__':
+    # print("Same as above, but assuming packing factor = 0.5, is", 2*sqrt(absolute_max_area_per_wire*0.5/pi))
+    print("Maximum diameter actually used is", DIAMETER)
+
     # x,y = np.load(sys.argv[-1]).T
-    x,y,z = np.load(sys.argv[-1]).T
+    x,y = np.load(sys.argv[-1]).T[:2]
     # x,y,z = np.load('data/3d_twisted.npy').T
     column = ary([x,y]).T
     num_slice, num_points, _ = column.shape
@@ -84,12 +90,13 @@ if __name__=='__main__':
             num_parallels[n, m] = in_range_beta
             assert len(distances)==(num_points-1), f"expected {num_points-1} points' distances to be calculated"
         """
-        if m%10==0:
+        if True:
             print('Finished strand {} at time={} s. Expected progress {}/{} minutes'.format(m+1,
                     round(time.time()-starttime,2),
                     round((time.time()-starttime)/60),
                     round((time.time()-starttime)/60*num_points/(m+1))
-                        )
-                    )
-    for slice_ind, strand1ind, strand2ind in np.argwhere(dist_at_interslice_spacing<COLLISION_RAD):
-        print("At inter-slice space {:4} (between {:4} and {:4}), found collision between strand {:3}-{:3}. They have a spacing of {}".format(slice_ind, slice_ind, (slice_ind+1)%num_slice, strand1ind, strand2ind, dist_at_interslice_spacing[slice_ind, strand1ind, strand2ind]))
+                        ),
+                    end='\r')
+    print(f'Displaying all places in the model where wires are closer than {DIAMETER}:')
+    for collision_ind, (slice_ind, strand1ind, strand2ind) in enumerate(np.argwhere(dist_at_interslice_spacing<DIAMETER)):
+        print("{:2}:At inter-slice space {:4} (between {:4} and {:4}), found collision between strand {:3}-{:3}. They have a spacing of {}".format(collision_ind//2, slice_ind, slice_ind, (slice_ind+1)%num_slice, strand1ind, strand2ind, dist_at_interslice_spacing[slice_ind, strand1ind, strand2ind]))

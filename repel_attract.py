@@ -250,12 +250,10 @@ def take_step_include_interp(underrelaxation_factor, wall_factor, attract_factor
     """
     global real_data
     self_repel = repel_dense(real_data, real_data)
-    upper_repel = repel_dense(real_data, np.roll(real_data, -1, axis=0), RAD=EFF_RADIUS*0.95)
     upper_repel_half = repel_dense(real_data, (real_data+np.roll(real_data, -1, axis=0))/2, RAD=EFF_RADIUS*0.95)
-    lower_repel = repel_dense(real_data, np.roll(real_data,  1, axis=0), RAD=EFF_RADIUS*0.95)
     lower_repel_half = repel_dense(real_data, (real_data+np.roll(real_data,  1, axis=0))/2, RAD=EFF_RADIUS*0.95)
     final_velocity, weights = [], []
-    for forces in (self_repel, upper_repel, lower_repel, upper_repel_half, lower_repel_half):
+    for forces in (self_repel, upper_repel_half, lower_repel_half):
         sum_vel, max_vecs = lay_out_vel_vecs(forces)
         weights.append(max_vecs)
         final_velocity.append(sum_vel)
@@ -290,42 +288,55 @@ def take_step_include_interp(underrelaxation_factor, wall_factor, attract_factor
 if __name__=='__main__':
     starttime=time.time()
 
-    if sys.argv[-1].endswith('.py'):
-        print('Starting from PRESTINE file')
-        real_data = np.load('PRESTINE.npy')
+    filename_input = [arg for arg in sys.argv[1:] if arg.endswith('.npy')]
+    skip_arg = 1
+    for arg in sys.argv[1:]:
+        try:
+            skip_arg = int(arg)
+        except ValueError:
+            pass
+
+    if len(filename_input)==0:
+        loadfilename = 'PRESTINE.npy'
     else:
-        print('Starting from file', sys.argv[-1])
-        real_data = np.load(sys.argv[-1]) # use the commandline argument provided as starting point
-    print('starting at time', time.time()-starttime, 's')
+        loadfilename = filename_input[0]
+    savefilename = loadfilename.replace('PRESTINE', 'repel_attract')
+    if skip_arg!=1:
+        savefilename = savefilename.split('.')[0]+'_skip'+str(skip_arg) + '.npy'
+
+    print("Loading from {}, using every {}-th frame, saving to {}".format(loadfilename, skip_arg, savefilename))
+    real_data = np.load(loadfilename)[::skip_arg]
+
+    print('Starting at time', time.time()-starttime, 's')
 
     # start with a smaller, more careful relaxation with a larger wall repulsion if starting from the PRESTINE distribution
-    if sys.argv[-1].endswith('.py'):
-        for num_steps in range(10):
-            take_step(underrelaxation_factor=0.2, wall_factor=2, attract_factor=0.02)
-            print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
-            np.save('repel_attract.npy', real_data)
+    if loadfilename=='PRESTINE.npy':
+        for num_steps in range(10): #take 10 easy steps
+            take_step(underrelaxation_factor=0.2, wall_factor=0.2, attract_factor=0.02)
+            print( "Taken step={} at time={}s".format(num_steps, round(time.time()-starttime,2) ) )
+            np.save("repel_attract.npy", real_data)
 
     # for num_steps in range(num_steps, 100): 
     else:
         num_steps = 0
-    if 'interp' in sys.argv:
-        print('Adding in repulsion from the interpolated slice as well')    
+    TINY_STEP = 0.05
+    # if 'interp' in sys.argv:
+    print("Adding in repulsion from the interpolated slice as well")    
     while True:
         num_steps += 1
-        TINY_STEP = 0.05
-        if 'interp' in sys.argv:
-            take_step_include_interp(
-                underrelaxation_factor=3*TINY_STEP,
-                wall_factor     = TINY_STEP,
-                attract_factor  = TINY_STEP,
-                weaken_attract  = 0.5)
+        # if 'interp' in sys.argv:
+        take_step_include_interp(
+            underrelaxation_factor=3*TINY_STEP,
+            wall_factor     = TINY_STEP,
+            attract_factor  = 600/len(real_data)*TINY_STEP,
+            weaken_attract  = 0.5)
             
-        else:
-            take_step(
-                underrelaxation_factor=3*TINY_STEP,
-                wall_factor     = TINY_STEP,
-                attract_factor  = TINY_STEP,
-                weaken_attract  = 0.5)
-            
-        print( 'Taken step={} at time={}s'.format(num_steps, round(time.time()-starttime,2) ) )
-        np.save('repel_attract.npy', real_data)
+        # else:
+        #     take_step(
+        #         underrelaxation_factor=3*TINY_STEP,
+        #         wall_factor     = TINY_STEP,
+        #         attract_factor  = 600/len(real_data)*TINY_STEP,
+        #         weaken_attract  = 0.5)
+
+        print( "Taken step={} at time={}s".format(num_steps, round(time.time()-starttime,2) ) )
+        np.save(savefilename, real_data)
