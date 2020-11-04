@@ -79,7 +79,7 @@ def Schwarz_Christoffel(list_of_points):
 def square_to_sextant(list_of_points, which_sextant=0):
 	transformed_list = []
 	for [u,v] in list_of_points:
-		factor = sqrt( (12*u+pi*offset_constant_in_sqrt/pi)/pi)
+		factor = sqrt( (12*u+offset_constant_in_sqrt)/pi)
 		x , y = factor * ary([cos(pi/6*v + pi/3*which_sextant), sin(pi/6*v + pi/3*which_sextant)])
 		transformed_list.append([x,y])
 	return transformed_list

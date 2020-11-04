@@ -26,7 +26,7 @@ if __name__=='__main__':
         filename = 'repel_attract_skip{}.npy'.format(skip_arg)
     else:
         filename = 'repel_attract.npy'
-    print('loading file', filename)
+    print('loading and converting file', filename)
     real_data = np.load(filename) #open the shape==(600, 417, 2) data
     zlist = np.linspace(0, HEIGHT_OF_TWIST, len(real_data), endpoint=False) # assign appropriate height (in mm)
     thetalist = np.linspace(0, tau, len(real_data), endpoint=False)

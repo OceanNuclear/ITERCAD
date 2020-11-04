@@ -13,12 +13,11 @@ from SimpleMapping import radius_min, radius_max
 area = (radius_max**2 - radius_min**2)*pi/6
 absolute_max_area_per_wire = area/417 # absolute maximum cross-section of each wire if they can be deformed
 square_packing_max_area = absolute_max_area_per_wire*pi/4
-area_assumed = square_packing_max_area * 0.4
+area_assumed = square_packing_max_area * 0.45
 radius_assumed = sqrt(area_assumed/pi)
 DIAMETER = radius_assumed*2
 
 if __name__=='__main__':
-    # print("Same as above, but assuming packing factor = 0.5, is", 2*sqrt(absolute_max_area_per_wire*0.5/pi))
     print("Maximum diameter actually used is", DIAMETER)
 
     # x,y = np.load(sys.argv[-1]).T
@@ -32,7 +31,7 @@ if __name__=='__main__':
     # for the m-th target strand,
     dist_at_interslice_spacing = np.zeros([num_slice, num_points, num_points])
     for s in range(num_slice):
-        np.fill_diagonal(dist_at_interslice_spacing[s], radius_max)
+        np.fill_diagonal(dist_at_interslice_spacing[s], (radius_max+radius_min)/2)
     num_parallels = np.zeros([num_slice, num_points])
     # dist_at_interslice_spacing[n, m] refers to the closest any wire gets to wire m between slice n and n+1
     starttime = time.time()
@@ -91,8 +90,8 @@ if __name__=='__main__':
             assert len(distances)==(num_points-1), f"expected {num_points-1} points' distances to be calculated"
         """
         if True:
-            print('Finished strand {} at time={} s. Expected progress {}/{} minutes'.format(m+1,
-                    round(time.time()-starttime,2),
+            print('Finished strand {} at time={:.2f} s. Expected progress {}/{} minutes'.format(m+1,
+                    time.time()-starttime,
                     round((time.time()-starttime)/60),
                     round((time.time()-starttime)/60*num_points/(m+1))
                         ),

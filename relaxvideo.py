@@ -64,9 +64,9 @@ if __name__=='__main__':
         import sys
         if len(sys.argv)>1:
             mask = ary([int(i) for i in sys.argv[1:]], dtype=int)
-            frame_data = np.load('repel_attract_skip4.npy')[:, mask, :]
+            frame_data = np.load('repel_attract_skip3.npy')[:, mask, :]
         else:
-            frame_data = np.load('repel_attract_skip4.npy')
+            frame_data = np.load('repel_attract_skip3.npy')
     else:
         from interframeattract import *
         column = np.load('', allow_pickle=True)
@@ -100,7 +100,7 @@ if __name__=='__main__':
     print(describe(min_dists))
 
     if VIDEO:
-        with writer.saving(fig, "repel_attract_skip4.mp4", 300):
+        with writer.saving(fig, "repel_attract_skip3.mp4", 300):
             for i in range(len(frame_data)):
                 if i%EVERY_NTH_FRAME==0:
                     xycoods1.set_offsets( frame_data[i][::3] )
