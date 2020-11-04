@@ -34,3 +34,27 @@ It also used an extremely slow looping approach, where the force is calculated i
 
 # Result
 The better version is created in repel_attract.py, using a linear kernel instead (x-1). You can play the video in data/*.mp4 to check out the result of the simultaion
+
+# Description of files
+## Python scripts for creating simulations
+```SimpleMapping.py``` is used to generate the PRISTINE.npy file, which is the mathematically generated optimal distribution of wire by transforming a tesselated circle into a sextant.
+
+```particlerelax.py``` contains function required to repel the wires from each other, without the ability of linking nearby layers together.
+
+```repel_attract.py``` contains function required to repel and attract
+
+## Python scripts for diagnostics
+```relaxvideo.py``` generates videos, so to use time as a proxy for the third axis.
+
+```check_collisions.py``` is a file used for measuring the nearest distance between any two wires' centres, especially *between* layers. The outputted distance value is compared against our expected wire diameter.
+
+```cast_into_3d.py``` adds the twist of the sheath on top of the cross-sectional data and add z-data into the output.
+
+```sketcher.py```is made for generating sketch.gif
+
+## Saving
+```*.npy``` files are binary files used by numpy to save numpy arrays. They are the primary method of saving the location of the 3d locations of the files.
+
+```video/``` contains working versions of videos made when attempting to diagnose the problem and improve the problem.
+
+```submit_jobs/``` contains files that were used to submit jobs to HPC clusters.
