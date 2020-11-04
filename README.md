@@ -4,15 +4,15 @@ The directory is created for simulating the distribution of wire inside a cable.
 A superconducting cable of 2500 strands will be manufactured as part of ITER's electromagnet to control the plasma. This calls for a nuclear heating simulation of these components. It is known that the magnetic field produced by these individual wires will affect the path taken by the charged particles, and therefore the path of some ionizing radiation. However, no model has been created that goes down to this level of detail, i.e. has the distribution of individual wires. This repository of code aims to generate such a model.
 
 # Set up
-The cable consist of 6 sub-cable twisted around a central (steel) sub-cable; and the sub-cable themselves are also twisted. Therefore we have to simulate ~417 strands of superconducting wires wrapped inside one sub-cable, twisted, and shaped into a truncated sextant (one sixth of a cookie ring), and then duplicate it six times, before pluggin it into CAD. The twisting of the sub-cable shows up as rotation in its cross-section as we move up the cable.
+The cable consist of 6 sub-cable twisted around a central (steel) sub-cable; and the sub-cable themselves are also twisted. Therefore we have to simulate ~416 strands of superconducting wires wrapped inside one sub-cable, twisted, and shaped into a truncated sextant (one sixth of a Fox's Party Ring™), and then duplicate it six times, before pluggin it into CAD. The twisting of the sub-cable shows up as rotation in its cross-section as we move up the cable.
 
-The distribution of wire is found by FEM, by relaxing from an initial distribution of wires. This initial distribution is formed by equipopulating a circle with 417 points, and then "squaring the circle" (mapping the circle into a square), and then perform an area-preserving transformation from the square into the sextant. By rotating this initial distribution of points used for the mapping, we can form a primitive rotation in the distribution of wires in the cross-section as we go up the wire. 
+The distribution of wire is found by FEM, by relaxing from an initial distribution of wires. This initial distribution is formed by equipopulating a circle with 416 points, and then "squaring the circle" (mapping the circle into a square), and then perform an area-preserving transformation from the square into the sextant. By rotating this initial distribution of points used for the mapping, we can form a primitive rotation in the distribution of wires in the cross-section as we go up the wire. 
 
 Of course, it would be too convenient if this initial distribution is already optimum (i.e. matches reality). But it is not, since some wires are packed more tightly than others in this distribution. Therefore we spread out these wires in the following simulation using FEM-like procedures, by making them repel near-by wires.
 
 # Method
 ## Initial method
-417 particles confined in the sextant shape are subjected to forces from the walls and from all other points (if they are close enough, i.e. within the effective radius).
+416 particles confined in the sextant shape are subjected to forces from the walls and from all other points (if they are close enough, i.e. within the effective radius).
 
 They are then displaced by an amount proportional the amount of repulsion it felt. 
 
