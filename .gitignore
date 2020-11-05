@@ -8,3 +8,4 @@ video/
 *.log
 matt_input/
 .unused/
+pictures/*.png
