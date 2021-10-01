@@ -110,6 +110,19 @@ def tessellate_circle(num_sample):
 	mask = [ quadrature(point)<1-0.8*r for point in tessellated_square]
 	return tessellated_square[mask]
 
+def vogels_model(num_sample):
+	"""
+	Tessellate points on a unit circle (radius 1) using a vogel's algorithm,
+	to generate a fermat spiral of points for tessellating a circle with points.
+	This is a new addition in 2021.
+	I haven't re-ran the simulation yet as of 2021-10-01 15:54:33
+	"""
+	# planning: we need num_sample points between 
+	radius = sqrt(np.linspace(0, 1, num_sample))
+	from scipy.constants import golden
+	angle = np.arange(num_sample) * tau * (1-golden) # I like using the negative version of the golden ratio more.
+	return ary([radius * sin(angle), radius * cos(angle)]).T
+
 def tessellate_circle_properly(num_sample):
 	excess = 0
 	while True:
@@ -130,7 +143,12 @@ def transform_2D_into_3D(list_of_points, z_of_central_column):
 	return list_of_3D_points
 ####
 if __name__=="__main__":
-	list_of_coordinates = tessellate_circle(450)#(wire_per_sextant)
+	# list_of_coordinates = tessellate_circle(450)#(wire_per_sextant)
+	list_of_coordinates = vogels_model(417)
+	plt.scatter(*list_of_coordinates.T)
+	theta = np.linspace(0, tau)
+	boundary, = plt.plot(cos(theta), sin(theta), color="C1")
+	plt.show()
 	'''
 	step_size = 2*pi/num_frames
 
